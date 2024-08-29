@@ -55,7 +55,7 @@ def _exe_path(path: Path) -> Optional[Path]:
 
 def _create_event_link(
     charm: 'ops.charm.CharmBase',
-    bound_event: 'ops.framework.BoundEvent',
+    bound_event: 'ops.framework.BoundEvent[ops.framework.EventBase]',
     link_to: Union[str, Path],
 ):
     """Create a symlink for a particular event.
@@ -141,7 +141,7 @@ def _emit_charm_event(charm: 'ops.charm.CharmBase', event_name: str, juju_contex
 
 def _get_event_args(
     charm: 'ops.charm.CharmBase',
-    bound_event: 'ops.framework.BoundEvent',
+    bound_event: 'ops.framework.BoundEvent[ops.framework.EventBase]',
     juju_context: _JujuContext,
 ) -> Tuple[List[Any], Dict[str, Any]]:
     event_type = bound_event.event_type

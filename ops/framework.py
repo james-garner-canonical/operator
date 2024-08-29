@@ -33,6 +33,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Generic,
     Hashable,
     Iterable,
     List,
@@ -80,6 +81,7 @@ _PathToSerializableMapping = Dict[_Path, Serializable]
 
 _T = TypeVar('_T')
 _EventType = TypeVar('_EventType', bound='EventBase')
+_EventType_co = TypeVar('_EventType_co', bound='EventBase', covariant=True)
 _ObjectType = TypeVar('_ObjectType', bound='Object')
 
 logger = logging.getLogger(__name__)
@@ -258,7 +260,7 @@ class EventBase:
         self.deferred = False
 
 
-class EventSource:
+class EventSource(Generic[_EventType_co]):
     """EventSource wraps an event type with a descriptor to facilitate observing and emitting.
 
     It is generally used as::
@@ -274,12 +276,12 @@ class EventSource:
     the event.
     """
 
-    def __init__(self, event_type: 'Type[EventBase]'):
+    def __init__(self, event_type: 'Type[_EventType_co]'):
         if not isinstance(event_type, type) or not issubclass(event_type, EventBase):
             raise RuntimeError(
                 f'Event requires a subclass of EventBase as an argument, got {event_type}'
             )
-        self.event_type: Type[EventBase] = event_type
+        self.event_type: Type[_EventType_co] = event_type
         self.event_kind: Optional[str] = None
         self.emitter_type: Optional[Type[Object]] = None
 
@@ -298,7 +300,9 @@ class EventSource:
         self.event_kind = event_kind
         self.emitter_type = emitter_type
 
-    def __get__(self, emitter: Optional['Object'], emitter_type: 'Type[Object]') -> 'BoundEvent':
+    def __get__(
+        self, emitter: Optional['Object'], emitter_type: 'Type[Object]'
+    ) -> 'BoundEvent[_EventType_co]':
         if emitter is None:
             return self  # type: ignore
         # Framework might not be available if accessed as CharmClass.on.event
@@ -310,7 +314,7 @@ class EventSource:
         return BoundEvent(emitter, self.event_type, typing.cast(str, self.event_kind))
 
 
-class BoundEvent:
+class BoundEvent(Generic[_EventType_co]):
     """Event bound to an Object."""
 
     def __repr__(self):
@@ -319,7 +323,7 @@ class BoundEvent:
             f'{type(self.emitter).__name__}.{self.event_kind} at {hex(id(self))}>'
         )
 
-    def __init__(self, emitter: 'Object', event_type: 'Type[EventBase]', event_kind: str):
+    def __init__(self, emitter: 'Object', event_type: 'Type[_EventType_co]', event_kind: str):
         self.emitter = emitter
         self.event_type = event_type
         self.event_kind = event_kind
@@ -485,7 +489,7 @@ class ObjectEvents(Object):
                 event_kinds.append(attr_name)
         return event_kinds
 
-    def events(self) -> Dict[str, BoundEvent]:
+    def events(self) -> Dict[str, BoundEvent[EventBase]]:  # should this be BoundEvent[Any] ?
         """Return a mapping of event_kinds to bound_events for all available events."""
         return {event_kind: getattr(self, event_kind) for event_kind in self._event_kinds()}
 
@@ -513,7 +517,7 @@ class PrefixedEvents:
         self._emitter = emitter
         self._prefix = key.replace('-', '_') + '_'
 
-    def __getattr__(self, name: str) -> BoundEvent:
+    def __getattr__(self, name: str) -> BoundEvent[Any]:
         return getattr(self._emitter, self._prefix + name)
 
 
@@ -757,7 +761,7 @@ class Framework(Object):
         """Discard a persistent snapshot."""
         self._storage.drop_snapshot(handle.path)
 
-    def observe(self, bound_event: BoundEvent, observer: Callable[[Any], None]):
+    def observe(self, bound_event: BoundEvent[_EventType], observer: Callable[[Any], None]):
         """Register observer to be called when bound_event is emitted.
 
         If this is called multiple times for the same event type, the
