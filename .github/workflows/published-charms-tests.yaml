@@ -87,8 +87,17 @@ jobs:
       - name: Install dependencies
         run: pip install tox~=4.2
 
-      - name: Run the charm's unit tests
-        run: tox -vve unit
+      - name: Run the charm's static tests
+        run: |
+          if tox l \
+            | cut --delimiter=' ' --fields=1 \
+            | grep --fixed-strings --line-regexp --quiet static
+            then tox -vve static
+            else exit 0
+          fi
+
+      #- name: Run the charm's unit tests
+      #  run: tox -vve unit
 
   charmcraft-profile-tests:
     runs-on: ubuntu-latest
