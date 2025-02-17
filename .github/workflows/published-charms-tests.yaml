@@ -29,9 +29,11 @@ jobs:
           - charm-repo: canonical/livepatch-k8s-operator
           - charm-repo: canonical/loki-k8s-operator
           - charm-repo: canonical/manual-tls-certificates-operator
+            run-static: true
           - charm-repo: canonical/mongodb-operator
           - charm-repo: canonical/mysql-router-k8s-operator
           - charm-repo: canonical/namecheap-lego-k8s-operator
+            run-static: true
           - charm-repo: canonical/nginx-ingress-integrator-operator
           - charm-repo: canonical/oathkeeper-operator
           - charm-repo: canonical/oauth2-proxy-k8s-operator
@@ -39,10 +41,12 @@ jobs:
           - charm-repo: canonical/pgbouncer-k8s-operator
           - charm-repo: canonical/ranger-k8s-operator
           - charm-repo: canonical/route53-lego-k8s-operator
+            run-static: true
           - charm-repo: canonical/s3-integrator
           - charm-repo: canonical/saml-integrator-operator
           - charm-repo: canonical/seldon-core-operator
           - charm-repo: canonical/self-signed-certificates-operator
+            run-static: true
           - charm-repo: canonical/smtp-integrator-operator
           - charm-repo: canonical/superset-k8s-operator
           - charm-repo: canonical/temporal-admin-k8s-operator
@@ -87,17 +91,12 @@ jobs:
       - name: Install dependencies
         run: pip install tox~=4.2
 
-      - name: Run the charm's static tests
-        run: |
-          if tox l \
-            | cut --delimiter=' ' --fields=1 \
-            | grep --fixed-strings --line-regexp --quiet static
-            then tox -vve static
-            else exit 0
-          fi
+      - name: Run the charm's unit tests
+        run: tox -vve unit
 
-      #- name: Run the charm's unit tests
-      #  run: tox -vve unit
+      - name: Run the charm's static tests
+        if: ${{ matrix.run-static }}
+        run: tox -vve static
 
   charmcraft-profile-tests:
     runs-on: ubuntu-latest
