@@ -91,13 +91,14 @@ jobs:
       - name: Install dependencies
         run: uv tool install tox~=4.2 --with tox-uv
 
+      - name: Run the charm's unit tests
+        id: unit
+        run: tox -vve unit
+
       - name: Run the charm's static tests
-        if: ${{ matrix.run-static }}
+        if: ${{ matrix.run-static && step.unit.outcome != 'skipped' }}
         run: tox -vve static
 
-      - name: Run the charm's unit tests
-        if: always()
-        run: tox -vve unit
 
   charmcraft-profile-tests:
     runs-on: ubuntu-latest
