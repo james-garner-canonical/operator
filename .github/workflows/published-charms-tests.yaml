@@ -89,7 +89,7 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: pip install tox~=4.2
+        run: uv tool install tox~=4.2 --with tox-uv
 
       - name: Run the charm's static tests
         if: ${{ matrix.run-static }}
