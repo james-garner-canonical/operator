@@ -94,9 +94,9 @@ jobs:
       - name: Run the charm's static tests
         if: ${{ matrix.run-static }}
         run: tox -vve static
-        continue-on-error: true
 
       - name: Run the charm's unit tests
+        if: always()
         run: tox -vve unit
 
   charmcraft-profile-tests:
