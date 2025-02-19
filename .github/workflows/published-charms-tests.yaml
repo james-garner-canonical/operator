@@ -92,7 +92,6 @@ jobs:
         run: |
           if [ -e "uv.lock" ]; then
             uv tool install tox~=4.2 --with tox-uv
-            uv lock
           else
             pip install tox~=4.2
           fi
@@ -102,7 +101,7 @@ jobs:
         run: tox -vve unit
 
       - name: Run the charm's static tests
-        if: ${{ matrix.run-static && steps.unit.outcome != 'skipped' }}
+        if: ${{ !cancelled() && matrix.run-static && steps.unit.outcome != 'skipped' }}
         run: tox -vve static
 
 
