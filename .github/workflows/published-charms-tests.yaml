@@ -89,7 +89,12 @@ jobs:
           fi
 
       - name: Install dependencies
-        run: uv tool install tox~=4.2 --with tox-uv
+        run: |
+          if [ -e "uv.lock" ]; then
+            uv tool install tox~=4.2 --with tox-uv
+          else
+            pip install tox~=4.2
+          fi
 
       - name: Run the charm's unit tests
         id: unit
