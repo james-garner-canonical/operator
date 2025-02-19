@@ -91,6 +91,7 @@ jobs:
       - name: Install dependencies
         run: |
           if [ -e "uv.lock" ]; then
+            uv lock
             uv tool install tox~=4.2 --with tox-uv
           else
             pip install tox~=4.2
