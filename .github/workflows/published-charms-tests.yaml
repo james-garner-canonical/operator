@@ -101,7 +101,7 @@ jobs:
         run: tox -vve unit
 
       - name: Run the charm's static tests
-        if: ${{ matrix.run-static && step.unit.outcome != 'skipped' }}
+        if: ${{ matrix.run-static && steps.unit.outcome != 'skipped' }}
         run: tox -vve static
 
 
