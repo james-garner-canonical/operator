@@ -1,0 +1,35 @@
+name: Integration Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        juju-channel: [ 3.6/stable ]
+        concierge-preset: [ microk8s ]  # TODO: machine
+
+    steps:
+      - name: Install concierge
+        run: snap install --classic concierge
+
+      - name: Run concierge
+        run: concierge prepare -p ${{ matrix.concierge-preset }} --juju-channel ${{ matrix.juju-channel }}
+
+      - name: Use latest ops
+        working-directory: test/integration/basic_charm
+        run: |
+          sed -i -e "/^ops[ <=~]/d" requirements.txt
+          echo -e "\ngit+$GITHUB_SERVER_URL/$GITHUB_REPOSITORY@$GITHUB_SHA#egg=ops" >> requirements.txt
+
+      - name: Pack charm
+        working-directory: test/integration/basic_charm
+        run: charmcraft pack
+
+      - name: Integration tests
+        run: tox -vve integration
