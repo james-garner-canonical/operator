@@ -1,0 +1,90 @@
+# This file configures Charmcraft.
+# See https://juju.is/docs/sdk/charmcraft-config for guidance.
+
+# (Required)
+name: basic
+
+
+# (Required)
+type: charm
+
+
+# (Recommended)
+title: Basic Charm
+
+
+# (Required)
+summary: A basic charm for use in testing.
+
+
+# (Required)
+description: |
+  This is a basic kubernetes charm for testing.
+
+  It has an action (basic-action) taking a data parameter.
+  It has a container (basic-container) running a simple demo app.
+
+  It's good to have a charm like this for integration testing.
+
+  This may be useful for testing other changes in ops and ops-testing.
+
+
+# (Required for 'charm' type)
+bases:
+  - build-on:
+    - name: ubuntu
+      channel: "22.04"
+    run-on:
+    - name: ubuntu
+      channel: "22.04"
+
+parts:
+  charm:
+    build-packages: [git]
+
+# (Optional) Configuration options for the charm
+# This config section defines charm config options, and populates the Configure
+# tab on Charmhub.
+# More information on this section at https://juju.is/docs/sdk/charmcraft-yaml#heading--config
+# General configuration documentation: https://juju.is/docs/sdk/config
+config:
+  options:
+    # An example config option to customise the log level of the workload
+    log-level:
+      description: |
+        Configures the log level of gunicorn.
+
+        Acceptable values are: "info", "debug", "warning", "error" and "critical"
+      default: "info"
+      type: string
+
+
+# Your workload’s containers.
+containers:
+  basic-container:
+    resource:
+      demo-server-image
+
+resources:
+  # An OCI image resource for each container listed above.
+  # You may remove this if your charm will run without a workload sidecar container.
+  demo-server-image:
+    type: oci-image
+    description: OCI image from GitHub Container Repository
+    # The upstream-source field is ignored by Juju. It is included here as a reference
+    # so the integration testing suite knows which image to deploy during testing. This field
+    # is also used by the 'canonical/charming-actions' Github action for automated releasing.
+    upstream-source: ghcr.io/canonical/api_demo_server:1.0.1
+
+actions:
+  basic-action:
+    description: "a basic action accepting json serialized data"
+    params:
+      data:
+        type: string
+        description: "json serialized data"
+        default: "null"
+
+peers:
+  replicas:
+    interface: basic-relation
