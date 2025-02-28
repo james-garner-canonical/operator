@@ -4,18 +4,14 @@
 # (Required)
 name: basic
 
-
 # (Required)
 type: charm
-
 
 # (Recommended)
 title: Basic Charm
 
-
 # (Required)
 summary: A basic charm for use in testing.
-
 
 # (Required)
 description: |
@@ -27,7 +23,6 @@ description: |
   It's good to have a charm like this for integration testing.
 
   This may be useful for testing other changes in ops and ops-testing.
-
 
 # (Required for 'charm' type)
 bases:
@@ -58,23 +53,22 @@ config:
       default: "info"
       type: string
 
-
 # Your workload’s containers.
 containers:
   basic-container:
     resource:
-      demo-server-image
+      container-image
 
 resources:
   # An OCI image resource for each container listed above.
   # You may remove this if your charm will run without a workload sidecar container.
-  demo-server-image:
+  container-image:
     type: oci-image
-    description: OCI image from GitHub Container Repository
+    description: Ubuntu container image
     # The upstream-source field is ignored by Juju. It is included here as a reference
     # so the integration testing suite knows which image to deploy during testing. This field
     # is also used by the 'canonical/charming-actions' Github action for automated releasing.
-    upstream-source: ghcr.io/canonical/api_demo_server:1.0.1
+    upstream-source: ubuntu:latest
 
 actions:
   basic-action:

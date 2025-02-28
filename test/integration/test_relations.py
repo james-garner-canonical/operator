@@ -18,7 +18,7 @@ def juju():
     try:
         j.deploy(
             './test/integration/basic_charm/basic_ubuntu-22.04-amd64.charm',
-            resource={'demo-server-image': 'ubuntu:latest'},
+            resource={'container-image': 'ubuntu:latest'},
         )
         yield j
     finally:
