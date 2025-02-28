@@ -36,8 +36,8 @@ class BasicCharm(ops.CharmBase):
             action = 'set'
             assert isinstance(data, dict)
             rel.data[self.unit] = data
-        result = rel.data[self.unit].items()
-        event.set_results({action: str(dict(result))})
+        result = dict(rel.data[self.unit])
+        event.set_results({action: str(result)})
 
 
 if __name__ == '__main__':  # pragma: nocover
