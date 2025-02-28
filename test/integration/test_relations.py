@@ -36,12 +36,13 @@ def set_relation_data(juju: jubilant.Juju, data: dict[str, str]) -> dict[str, st
 
 
 def test_assign_relation_data(juju: jubilant.Juju):
-    # uncomment the following lines to have the test pass
+    # uncomment the following 3 lines to have the test pass
     #original = get_relation_data(juju)
     #print(original)
     #assert set(original) == {'egress-subnets', 'ingress-address', 'private-address'}
-    import time
-    time.sleep(10)
+    # uncomment the following 2 lines and see what happens ...
+    #import time
+    #time.sleep(10)
     data = {'foo': 'bar', 'baz': 'bartholemew'}
     new = set_relation_data(juju, data)
     print(new)
