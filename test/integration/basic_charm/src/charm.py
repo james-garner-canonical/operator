@@ -15,6 +15,7 @@ ACTION = 'basic-action'
 CONTAINER = 'basic-container'
 RELATION = 'replicas'
 
+
 class BasicCharm(ops.CharmBase):
     """Charm the application."""
 
@@ -22,12 +23,18 @@ class BasicCharm(ops.CharmBase):
         super().__init__(framework)
         framework.observe(self.on[CONTAINER].pebble_ready, self._on_pebble_ready)
         framework.observe(self.on[ACTION].action, self._on_action)
-        framework.observe(self.on[RELATION].relation_created, self._on_relation)
-        framework.observe(self.on[RELATION].relation_joined, self._on_relation)
-        framework.observe(self.on[RELATION].relation_changed, self._on_relation)
-        framework.observe(self.on[RELATION].relation_departed, self._on_relation)
-        framework.observe(self.on[RELATION].relation_broken, self._on_relation)
-        for event in self.on.config_changed, self.on.start, self.on.leader_elected, self.on[CONTAINER].pebble_ready, self.on[ACTION].action:
+        for event in (
+            self.on.config_changed,
+            self.on.start,
+            self.on.leader_elected,
+            self.on[CONTAINER].pebble_ready,
+            self.on[ACTION].action,
+            self.on[RELATION].relation_created,
+            self.on[RELATION].relation_joined,
+            self.on[RELATION].relation_changed,
+            self.on[RELATION].relation_departed,
+            self.on[RELATION].relation_broken,
+        ):
             framework.observe(event, self._debug)
 
     def _on_pebble_ready(self, event: ops.PebbleReadyEvent):
@@ -52,20 +59,8 @@ class BasicCharm(ops.CharmBase):
 
     def _debug(self, event: ops.EventBase):
         rel = self.model.get_relation(RELATION)
-        if rel is None:
-            rel_data = None
-        else:
-            rel_data = dict(rel.data[self.unit])
+        rel_data = dict(rel.data[self.unit]) if rel is not None else None
         logger.critical(f'_debug {type(event).__name__} {rel_data}')
-
-
-    def _on_relation(self, event: ops.RelationEvent):
-        rel = self.model.get_relation(RELATION)
-        if rel is None:
-            rel_data = None
-        else:
-            rel_data = dict(rel.data[self.unit])
-        logger.critical(f'_on_relation {type(event).__name__} {rel_data}')
 
 
 if __name__ == '__main__':  # pragma: nocover
