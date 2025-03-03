@@ -1,0 +1,47 @@
+name: Integration Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        juju-channel: [ 3.6/stable ]
+        concierge-preset: [ microk8s ]  # TODO: machine
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'  # jubilant requires 3.12+
+
+      - name: Install tox
+        run: pip install tox~=4.2
+
+      - name: Install concierge
+        run: sudo snap install --classic concierge
+
+      - name: Run concierge
+        run: sudo concierge prepare -p ${{ matrix.concierge-preset }} --juju-channel ${{ matrix.juju-channel }}
+
+      - name: Checkout the ops repo
+        uses: actions/checkout@v3
+
+      - name: Use ops from this branch in the charm
+        working-directory: test/integration/basic_charm
+        run: |
+          sed -i -e "/^ops[ <=~]/d" requirements.txt
+          echo -e "\ngit+$GITHUB_SERVER_URL/$GITHUB_REPOSITORY@$GITHUB_SHA#egg=ops" >> requirements.txt
+
+      - name: Pack charm
+        working-directory: test/integration/basic_charm
+        run: charmcraft pack
+
+      - name: Integration tests
+        run: tox -vve integration
