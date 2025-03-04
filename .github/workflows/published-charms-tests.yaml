@@ -102,7 +102,7 @@ jobs:
 
       - name: Run the charm's unit tests
         if: ${{ !cancelled() && steps.deps.outcome == 'success' }}  # default behaviour if 1st step
-        run: tox -vve unit
+        run: tox -vve unit || { echo "::error::Unit tests failed." && exit 1; }
 
       - name: Check for tox static environment
         id: has-static
@@ -116,7 +116,7 @@ jobs:
 
       - name: Run the charm's static tests
         if: ${{ !cancelled() && steps.deps.outcome == 'success' && steps.has-static.outputs.static == 'true' }}
-        run: tox -vve static
+        run: tox -vve static || { echo "::error::Static tests failed." && exit 1; }
 
 
   charmcraft-profile-tests:
