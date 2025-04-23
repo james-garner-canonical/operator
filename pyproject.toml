@@ -59,7 +59,7 @@ harness = []
 
 [build-system]
 requires = [
-    "setuptools>=60",
+    "setuptools>=61",
 ]
 build-backend = "setuptools.build_meta"
 
