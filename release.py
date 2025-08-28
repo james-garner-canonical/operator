@@ -164,6 +164,13 @@ def create_draft_release(
     return release
 
 
+def get_release_notes_and_changelog(release_notes: str, tag: str) -> tuple[str, str]:
+    categories, full_changelog = parse_release_notes(release_notes)
+    notes = format_release_notes(categories, full_changelog)
+    changes = format_changes(categories, tag)
+    return notes, changes
+
+
 def parse_release_notes(release_notes: str) -> tuple[dict[str, list[tuple[str, str]]], str | None]:
     """Parse auto-generated release notes into categories.
 
@@ -215,16 +222,24 @@ def format_release_notes(
     Results in a Markdown formatted string with sections for each commit type.
     If `full_changelog` is provided, it is appended at the end.
     """
-    lines = ["## What's Changed", '']
-    for commit_type, items in categories.items():
-        if items:
-            lines.append(f'### {commit_type_to_category(commit_type)}')
-            for description, pr_link in items:
-                lines.append(f'* {description} in {pr_link}')
-            lines.append('')
+    lines = ["## What's Changed", '', *format_commits(categories)]
     if full_changelog:
         lines.append(full_changelog)
     return '\n'.join(lines)
+
+
+def format_commits(categories: dict[str, list[tuple[str, str]]]) -> list[str]:
+    """Format commit lines for release notes and changelog."""
+    lines: list[str] = []
+    for commit_type, items in categories.items():
+        if not items:
+            continue
+        lines.append(f'### {commit_type_to_category(commit_type)}')
+        for description, pr_link in items:
+            assert (match := re.match(r'https?://[^ ]+/pull/(\d+)', pr_link))
+            lines.append(f'* {description} (#{match.group(1)})')
+        lines.append('')
+    return lines
 
 
 def print_release_notes(notes: str):
@@ -278,21 +293,10 @@ def format_changes(categories: dict[str, list[tuple[str, str]]], tag: str) -> st
 
     The header is formatted as a top-level heading with the tag and date.
     The content is a Markdown formatted string with sections for each commit type.
-    Each item is formatted as a bullet point with the description and PR number in parentheses.
     """
     today = datetime.datetime.now().strftime('%d %B %Y')
-    lines = [f'# {tag} - {today}\n']
-    for commit_type, items in categories.items():
-        if items:
-            lines.append(f'## {commit_type_to_category(commit_type)}\n')
-            for description, pr_link in items:
-                pr_num = '?'
-                match = re.match(r'https?://[^ ]+/pull/(\d+)', pr_link)
-                if match:
-                    pr_num = match.group(1)
-                lines.append(f'* {description} (#{pr_num})')
-            lines.append('')
-    return '\n'.join(lines) + '\n'
+    lines = [f'# {tag} - {today}', '', *format_commits(categories), '']
+    return '\n'.join(lines)
 
 
 def update_changes_file(changes: str, file: str):
@@ -508,8 +512,7 @@ def draft_release(
         exit(1)
     logger.info('Draft release created: %s', release.html_url)
 
-    categories, full_changelog = parse_release_notes(release.body)
-    notes = format_release_notes(categories, full_changelog)
+    notes, changes = get_release_notes_and_changelog(release.body, tag)
     print_release_notes(notes)
 
     title, summary = input_title_and_summary(release)
@@ -519,7 +522,6 @@ def draft_release(
 
     update_draft_release(release, title, notes)
 
-    changes = format_changes(categories, tag)
     update_changes_file(changes, 'CHANGES.md')
 
     update_versions_for_release(tag)
@@ -585,6 +587,56 @@ def post_release(
         base=base_branch,
     )
     logger.info('Created PR: %s', pr.html_url)
+
+
+def test_get_release_notes_and_changelog():
+    tag = "hello-world"
+    release_notes = """
+## What's Changed
+* ci: fixes for the sbom and secscan workflow, and trigger it on publishing by @tonyandrewmeyer in https://github.com/canonical/operator/pull/1916
+* chore: adjust versions after release by @tonyandrewmeyer in https://github.com/canonical/operator/pull/1932
+* ci: store the charmcraft logs if packing fails by @tonyandrewmeyer in https://github.com/canonical/operator/pull/1936
+* ci: Install release dependencies for the TIOBE analysis by @tonyandrewmeyer in https://github.com/canonical/operator/pull/1930
+* docs: update links and config for switch to documentation.ubuntu.com/ops by @dwilding in https://github.com/canonical/operator/pull/1940
+* feat: add security event logging by @tonyandrewmeyer in https://github.com/canonical/operator/pull/1905
+
+## New Contributors
+* @foobar made their first contribution in https://github.com/canonical/operator/pull/9000
+
+**Full Changelog**: https://github.com/canonical/operator/compare/3.1.0...foo
+""".strip()
+    notes, changes = get_release_notes_and_changelog(release_notes, tag)
+    assert notes == """
+## What's Changed
+
+### Features
+* Add security event logging (#1905)
+
+### Documentation
+* Update links and config for switch to documentation.ubuntu.com/ops (#1940)
+
+### CI
+* Fixes for the sbom and secscan workflow, and trigger it on publishing (#1916)
+* Store the charmcraft logs if packing fails (#1936)
+* Install release dependencies for the TIOBE analysis (#1930)
+
+**Full Changelog**: https://github.com/canonical/operator/compare/3.1.0...foo
+""".strip()
+    assert changes == """
+# hello-world - 28 August 2025
+
+### Features
+* Add security event logging (#1905)
+
+### Documentation
+* Update links and config for switch to documentation.ubuntu.com/ops (#1940)
+
+### CI
+* Fixes for the sbom and secscan workflow, and trigger it on publishing (#1916)
+* Store the charmcraft logs if packing fails (#1936)
+* Install release dependencies for the TIOBE analysis (#1930)
+""".strip() + "\n\n"
+    return notes, changes
 
 
 if __name__ == '__main__':
