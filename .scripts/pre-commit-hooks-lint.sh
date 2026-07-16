@@ -1,12 +1,7 @@
 #!/usr/bin/env bash
-# Runs the pre-commit-hooks (https://github.com/pre-commit/pre-commit-hooks)
-# checks that have no file-discovery of their own -- they expect a caller
-# (normally pre-commit itself) to hand them a file list, so we build one with
-# git. `git grep -I -l ''` lists every tracked, non-binary file: -I skips
-# binary files (matching upstream's `types: [text]`) and an empty pattern
-# matches every line, so -l lists every file that "matched".
 set -ueo pipefail
 cd "$(git rev-parse --show-toplevel)"
+
 TRACKED_FILES=$(git ls-files)
 EXECUTABLE_FILES=$(git ls-files -s | grep '^100755' | cut -f2)
 NONBINARY_FILES=$(git grep -Il '' -- .)
