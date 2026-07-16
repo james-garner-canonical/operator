@@ -159,6 +159,7 @@ def main():
     )
     args = parser.parse_args()
     path_to_ops = pathlib.Path(__file__).parent.parent
+    blocks: list[str] = []
     for directory, base_url, make_ref, ref_sub in (
         (path_to_ops / 'docs', 'https://canonical.com/juju/docs/ops/latest/', make_ops_ref, None),
         (
@@ -185,18 +186,19 @@ def main():
                     continue
                 title = mo.group(1).strip()
                 practices = extract_best_practice_blocks_rst(file_path, text)
+            if not practices:
+                continue
             link = f'{base_url}{file_path.relative_to(directory).with_suffix("")}/'
-            if len(practices):
-                print(f'**[{title}]({link})**')
+            lines = [f'**[{title}]({link})**']
             for heading, ref, practice in practices:
                 ref = make_ref(heading, ref) if ref and heading else ref
                 see_more = f' See {ref}.' if heading and ref else ''
                 practice = re.sub(r'\s+', ' ', practice).strip()
                 if ref_sub:
                     practice = re.sub(r':ref:', ref_sub, practice)
-                print(f'- {practice}{see_more}')
-            if len(practices):
-                print()
+                lines.append(f'- {practice}{see_more}')
+            blocks.append('\n'.join(lines))
+    print('\n\n'.join(blocks))
 
 
 if __name__ == '__main__':

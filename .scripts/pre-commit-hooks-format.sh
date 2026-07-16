@@ -6,10 +6,7 @@ set -xueo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 NONBINARY_FILES=$(git grep -Il '' -- .)
-# end-of-file-fixer and trailing-whitespace-fixer exclude this file, unlike
-# mixed-line-ending below.
-TRIMMABLE_FILES=$(git grep -Il '' -- . ':!docs/reuse/best-practices.txt')
 
-echo "$TRIMMABLE_FILES" | xargs -r end-of-file-fixer
-echo "$TRIMMABLE_FILES" | xargs -r trailing-whitespace-fixer
+echo "$NONBINARY_FILES" | xargs -r end-of-file-fixer
+echo "$NONBINARY_FILES" | xargs -r trailing-whitespace-fixer
 echo "$NONBINARY_FILES" | xargs -r mixed-line-ending
