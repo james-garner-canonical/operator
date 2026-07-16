@@ -1,44 +1,15 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-      - id: check-added-large-files
-      - id: check-ast
-      - id: check-case-conflict
-      - id: check-executables-have-shebangs
-      - id: check-shebang-scripts-are-executable
-      - id: check-merge-conflict
-      - id: check-symlinks
-      - id: check-json
-      - id: check-yaml
-      - id: check-toml
-      - id: mixed-line-ending
-      - id: end-of-file-fixer
-        exclude: '^docs/reuse/best-practices\.txt$'
-      - id: trailing-whitespace
-        exclude: '^docs/reuse/best-practices\.txt$'
-      - id: detect-private-key
   - repo: local
     hooks:
-      - id: ruff
-        name: ruff (uv)
-        entry: uv run --group lint -- ruff check --preview --force-exclude
+      - id: format
+        name: format (tox)
+        entry: tox -e format
         language: system
-        types_or: [python, pyi]
-        exclude: '^(examples/|docs/conf\.py|docs/\_dev/|tracing/ops_tracing/vendor/)'
-      - id: ruff-format
-        name: ruff-format (uv)
-        entry: uv run --group lint -- ruff format --preview --force-exclude
+        pass_filenames: false
+        always_run: true
+      - id: lint
+        name: lint (tox)
+        entry: tox -e lint
         language: system
-        types_or: [python, pyi]
-        exclude: '^(examples/|docs/conf\.py|docs/\_dev/|tracing/ops_tracing/vendor/)'
-      - id: codespell
-        name: codespell (uv)
-        entry: uv run --group lint -- codespell
-        language: system
-        types: [text]
-      - id: zizmor
-        name: zizmor (uv)
-        entry: uv run --group lint -- zizmor
-        language: system
-        files: '^\.github/workflows/.*\.ya?ml$'
+        pass_filenames: false
+        always_run: true

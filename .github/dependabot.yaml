@@ -55,6 +55,7 @@ updates:
           - "codespell"
           - "coverage"
           - "pre-commit"
+          - "pre-commit-hooks"
           - "types-*"
           - "zizmor"
           - "mypy"

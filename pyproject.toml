@@ -40,6 +40,7 @@ lint = [
     "ruff==0.15.20",
     "codespell==2.4.2",
     "zizmor==1.26.1",
+    "pre-commit-hooks==5.0.0",
     "ops[testing,tracing]",
     "pyright~=1.1",
     "typing_extensions~=4.2",
