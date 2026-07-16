@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -xueo pipefail
+set -ueo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
 NONBINARY_FILES=$(git grep -Il '' -- .)
